@@ -13,15 +13,18 @@ const CLEAR = 'rgba(0,0,0,0)'
 
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 const landscape = () => matchMedia('(orientation: landscape)').matches
-// ponytail: header (70 px, 94 px from md up) and ribbon (76 px) are CSS constants; only #card (Itinerary.tsx) varies, so only it is measured.
-// Portrait stacks the card above the ribbon (pad bottom); landscape docks it bottom-right (pad right).
+// ponytail: the chrome sizes are CSS constants: sidebar 400 px (lg up, TripPanel.tsx), header 70 px / 94 px from md up (App.tsx), ribbon 76 px.
+// Only #card (Itinerary.tsx, below lg) varies, so only it is measured: portrait stacks it above the ribbon, landscape docks it bottom-right.
 const card = (k: 'offsetHeight' | 'offsetWidth') => document.getElementById('card')?.[k] ?? 0
-const mapPadding = () => ({
-  top: matchMedia('(min-width: 768px)').matches ? 104 : 84,
-  left: 24,
-  bottom: 100 + (landscape() ? 0 : card('offsetHeight') + 8),
-  right: 24 + (landscape() ? card('offsetWidth') + 16 : 0),
-})
+const mapPadding = () => {
+  const lg = matchMedia('(min-width: 1024px)').matches
+  return {
+    top: lg ? 48 : matchMedia('(min-width: 768px)').matches ? 104 : 84, // lg: clears the attribution bar (the header lives in the sidebar)
+    left: lg ? 24 + 400 + 16 : 24,
+    bottom: 100 + (landscape() ? 0 : card('offsetHeight') + 8),
+    right: Math.max(56, 24 + (landscape() ? card('offsetWidth') + 16 : 0)), // 56 clears the zoom buttons
+  }
+}
 
 // Positive line-offset = right of travel direction, so outbound and return on the same road split into two lanes.
 const LANE_OFFSET: ExpressionSpecification = ['interpolate', ['linear'], ['zoom'], 4, 1.5, 9, 4]
@@ -168,17 +171,17 @@ export default function TripMap({ hoveredId, selectedId, onHover, onSelect }: Pr
     })
   }, [selected, selectedId, loaded])
 
-  // Rotating a phone/tablet moves the card from above the ribbon to the right, so the camera padding changes: re-frame.
+  // Rotating a phone/tablet moves the card from above the ribbon to the right, and crossing lg swaps card ↔ sidebar: the padding changes, re-frame.
   useEffect(() => {
-    const mq = matchMedia('(orientation: landscape)')
     const refit = () => {
       const m = mapRef.current
       if (!m) return
       m.resize() // the media query fires before MapLibre's own ResizeObserver
       m.fitBounds(selected?.bbox ?? TRIP_BBOX, { padding: mapPadding(), duration: 0, ...(selected && { maxZoom: 10 }) })
     }
-    mq.addEventListener('change', refit)
-    return () => mq.removeEventListener('change', refit)
+    const mqs = ['(orientation: landscape)', '(min-width: 1024px)'].map(q => matchMedia(q))
+    for (const mq of mqs) mq.addEventListener('change', refit)
+    return () => { for (const mq of mqs) mq.removeEventListener('change', refit) }
   }, [selected])
 
   // An empty-map click deselects, but only if it wasn't the first half of a double-tap/double-click zoom.

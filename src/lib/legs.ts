@@ -101,3 +101,12 @@ export const stepLeg = (id: number, d: number) => LEGS[(id - 1 + d + LEGS.length
 
 /** Accessible name of a leg: "Leg 04 of 13, Budapest to Vienna, 244 km, about 2 h 40 min". */
 export const legLabel = (l: TripLeg) => `Leg ${legNo(l.id)} of ${LEGS.length}, ${l.fromCity.name} to ${l.toCity.name}, ${fmtKm(l.km)}, about ${fmtDuration(l.min).slice(1)}`
+
+/** Day number of a leg: from the dates once known, else the leg number (one leg per day). */
+export const dayOf = (l: TripLeg) => (l.date && LEGS[0].date ? Math.round((Date.parse(l.date) - Date.parse(LEGS[0].date)) / 864e5) + 1 : l.id)
+
+/** Cumulative km after each leg, by leg index. */
+export const KM_SO_FAR = LEGS.map((_, i) => LEGS.slice(0, i + 1).reduce((s, l) => s + l.km, 0))
+
+/** Index of the first leg that arrives somewhere already visited: legs before it go out, from it on they come back. */
+export const BACK = LEGS.findIndex((l, i) => LEGS.slice(0, i).some(p => p.from === l.to || p.to === l.to))

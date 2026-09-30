@@ -67,7 +67,6 @@ export function Ribbon({ hoveredId, selectedId, onHover, onSelect }: Props) {
                 data-leg={leg.id}
                 type="button"
                 aria-expanded={selected}
-                aria-controls="card"
                 aria-label={legLabel(leg)}
                 tabIndex={leg.id === (stop ?? selectedId ?? 1) ? 0 : -1}
                 data-lit={lit || undefined}
@@ -91,13 +90,13 @@ export function Ribbon({ hoveredId, selectedId, onHover, onSelect }: Props) {
   )
 }
 
-function MapsLink({ leg }: { leg: TripLeg }) {
+export function MapsLink({ leg, className = '' }: { leg: TripLeg; className?: string }) {
   return (
     <a
       href={gmapsUrl(leg)}
       target="_blank"
       rel="noopener"
-      className="inline-flex min-h-11 items-center gap-2 rounded-full bg-light px-4 py-2 text-sm font-semibold text-navy transition-colors hover:bg-white"
+      className={`${className} inline-flex min-h-11 items-center gap-2 rounded-full bg-light px-4 py-2 text-sm font-semibold text-navy transition-colors hover:bg-white`}
     >
       Open in Google Maps
       <svg viewBox="0 0 16 16" className="size-3.5" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
