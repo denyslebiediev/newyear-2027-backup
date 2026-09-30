@@ -3,6 +3,6 @@ import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  base: '/newyear-2027/',
+  base: '/newyear-2027-backup/',
   plugins: [react(), tailwindcss()],
 })
